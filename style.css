@@ -1,0 +1,240 @@
+
+* {
+        box-sizing: border-box;
+        white-space: nowrap;
+        user-select: none;
+}
+
+body {
+        background-color: #000000;
+        display: flex;
+        align-items: center;
+        column-gap: 50px;
+        padding: 20px;
+        margin: 0px;
+}
+
+.scoreboard {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+}
+
+h1 {
+        font-size: 64px;
+        color: #ffffff;
+        margin: 0px;
+}
+
+.sheet {
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #ffffff;
+}
+
+.sheet.blocked,
+.sheet.blocked * {
+        cursor: not-allowed !important;
+        opacity: 0.7;
+}
+
+.sheet .header {
+        display: flex;
+        background-color: #222222;
+        border-bottom: 2px solid #ffffff;
+}
+
+.sheet .header .cell {
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: center;
+}
+
+.sheet .content {
+        display: flex;
+        flex-direction: column;
+}
+
+.sheet .row {
+        display: flex;
+        column-gap: 10px;
+}
+
+.sheet .row + .row {
+        border-top: 1px solid #999999;
+}
+
+.sheet .cell {
+        flex: 1 1;
+        color: #ffffff;
+        padding: 8px;
+}
+
+.sheet .cell.empty {
+        cursor: pointer;
+        transition: 0.25s;
+}
+
+.sheet .cell.empty:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+}
+
+.sheet .cell.null {
+        cursor: pointer;
+        transition: 0.25s;
+        background-color: rgba(255, 20, 80, 0.25);
+}
+
+.sheet .cell.null:hover {
+        background-color: rgba(255, 20, 80, 0.5);
+}
+
+.sheet .cell + .cell {
+        border-left: 1px solid #ffffff;
+        text-align: center;
+        font-weight: 600;
+}
+
+.tabletop {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+}
+
+.reroll_count {
+        font-size: 24px;
+        font-weight: 600;
+        color: #ffffff;
+        padding: 10px 20px;
+}
+
+.play_area {
+        display: flex;
+        column-gap: 10px;
+        background-color: #9a0c20;
+        border: 5px solid #790514;
+        border-radius: 40px;
+        padding: 120px 40px;
+}
+
+.dice {
+        display: flex;
+        justify-content: center;
+        align-self: center;
+        column-gap: 20px;
+}
+
+.die {
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+        justify-content: center;
+        align-items: center;
+        background-color: transparent;
+        border-radius: 10px;
+        padding: 10px;
+        transition: 0.25s;
+}
+
+.die:hover {
+        background-color: rgba(0, 0, 0, 0.25);
+}
+
+.die .value {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100px;
+        height: 100px;
+}
+
+.die .value::before {
+        font-size: 100px;
+        line-height: 100px;
+        color: #ffffff;
+}
+
+.die .value.one::before {
+        content: '\2680';
+}
+
+.die .value.two::before {
+        content: '\2681';
+}
+
+.die .value.three::before {
+        content: '\2682';
+}
+
+.die .value.four::before {
+        content: '\2683';
+}
+
+.die .value.five::before {
+        content: '\2684';
+}
+
+.die .value.six::before {
+        content: '\2685';
+}
+
+.die .state {
+        display: flex;
+        justify-content: center;
+        cursor: pointer;
+}
+
+.die .state.keep:hover::before {
+        background-color: #000000;
+}
+
+.die .state.reroll:hover::before {
+        background-color: #ffffff;
+}
+
+.die .state::before {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 24px;
+        line-height: 24px;
+        font-weight: 600;
+        color: #000000;
+        transition: 0.25s;
+}
+
+.die .state.keep::before {
+        content: 'KEEP';
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+}
+
+.die .state.reroll::before {
+        content: 'RE-ROLL';
+}
+
+button.roll {
+        align-self: center;
+}
+
+button {
+        aspect-ratio: 1;
+        background: #ffffff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 42px;
+        line-height: 42px;
+        font-weight: 600;
+        color: #000000;
+        cursor: pointer;
+        transition: 0.25s;
+}
+
+button:hover {
+        background-color: #dddddd;;
+}
+
+button:active {
+        background-color: #cccccc;
+}

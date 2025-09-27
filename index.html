@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+        <head>
+                <link rel="stylesheet" href="style.css">
+                <script src="game.js"></script>
+        </head>
+        <body>
+                <div class="scoreboard">
+                        <h1>YAHTZEE</h1>
+                        <div class="sheet" onmouseup="writePoints(event)">
+                                        <div class="row header">
+                                                <div class="cell">Upper Section</div>
+                                                <div class="cell">Points</div>
+                                        </div>
+                                        <div class="row count_1">
+                                                <div class="cell">Aces</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row count_2">
+                                                <div class="cell">Twos</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row count_3">
+                                                <div class="cell">Threes</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row count_4">
+                                                <div class="cell">Fours</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row count_5">
+                                                <div class="cell">Fives</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row count_6">
+                                                <div class="cell">Sixes</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row total_b">
+                                                <div class="cell">Total</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                        <div class="row bonus">
+                                                <div class="cell">Bonus</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                        <div class="row total_u">
+                                                <div class="cell">Upper Total</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                        <div class="row header">
+                                                <div class="cell">Lower Section</div>
+                                                <div class="cell">Points</div>
+                                        </div>
+                                        <div class="row kind_3">
+                                                <div class="cell">3 of a Kind</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row kind_4">
+                                                <div class="cell">4 of a Kind</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row house_0">
+                                                <div class="cell">Full House</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row straight_4">
+                                                <div class="cell">Small Straight</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row straight_5">
+                                                <div class="cell">Large Straight</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row kind_5">
+                                                <div class="cell">YAHTZEE</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row chance_0">
+                                                <div class="cell">Chance</div>
+                                                <div class="cell empty"></div>
+                                        </div>
+                                        <div class="row total_l">
+                                                <div class="cell">Lower Total</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                        <div class="row total_u">
+                                                <div class="cell">Upper Total</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                        <div class="row total_g">
+                                                <div class="cell">Grand Total</div>
+                                                <div class="cell"></div>
+                                        </div>
+                                </div>
+                        </div>
+                </div>
+                <div class="tabletop">
+                        <div class="reroll_count">Available Re-Rolls: 3</div>
+                        <div class="play_area">
+                                <div class="dice">
+                                        <div class="die">
+                                                <div class="value one"></div>
+                                                <div class="state reroll" onclick="selectDie(event)"></div>
+                                        </div>
+                                        <div class="die">
+                                                <div class="value two"></div>
+                                                <div class="state reroll" onclick="selectDie(event)"></div>
+                                        </div>
+                                        <div class="die">
+                                                <div class="value three"></div>
+                                                <div class="state reroll" onclick="selectDie(event)"></div>
+                                        </div>
+                                        <div class="die">
+                                                <div class="value four"></div>
+                                                <div class="state reroll" onclick="selectDie(event)"></div>
+                                        </div>
+                                        <div class="die">
+                                                <div class="value five"></div>
+                                                <div class="state reroll" onclick="selectDie(event)"></div>
+                                        </div>
+                                </div>
+                                <button class="roll" onclick="rollDice()">ROLL</button>
+                        </div>
+                </div>
+        </body>
+</html>
