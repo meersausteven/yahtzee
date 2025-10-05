@@ -26,16 +26,30 @@ h1 {
         margin: 0px;
 }
 
+.title {
+        display: flex;
+        column-gap: 50px;
+        align-items: center;
+}
+
+.highscore {
+        font-size: 20px;
+        color: #ffffff;
+}
+
 .sheet {
         display: flex;
         flex-direction: column;
         border: 2px solid #ffffff;
+        transition: 0.25s;
 }
 
-.sheet.blocked,
+.sheet.blocked {
+        opacity: 0.7;
+}
+
 .sheet.blocked * {
         cursor: not-allowed !important;
-        opacity: 0.7;
 }
 
 .sheet .header {
@@ -64,18 +78,35 @@ h1 {
         border-top: 1px solid #999999;
 }
 
+.sheet .row.bonus {
+        background-color: rgba(45, 210, 25, 0.15);
+}
+
+.sheet .row.total {
+        background-color: rgba(204, 187, 34, 0.25);
+}
+
+.sheet .row.header.total {
+        border-top: 3px dotted #ffffff;
+        background-color: rgba(204, 54, 34, 0.25);
+}
+
+.sheet .section + .section {
+        border-top: 2px solid #999999;
+}
+
 .sheet .cell {
         flex: 1 1;
         color: #ffffff;
         padding: 8px;
 }
 
-.sheet .cell.empty {
+.sheet .row.empty .cell + .cell {
         cursor: pointer;
         transition: 0.25s;
 }
 
-.sheet .cell.empty:hover {
+.sheet .row.empty .cell + .cell:hover {
         background-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -110,11 +141,26 @@ h1 {
 
 .play_area {
         display: flex;
-        column-gap: 10px;
+        flex-direction: column;
+        row-gap: 20px;
         background-color: #9a0c20;
         border: 5px solid #790514;
         border-radius: 40px;
         padding: 120px 40px;
+}
+
+.patterns {
+        height: 24px;
+        margin-top: -44px;
+        font-size: 24px;
+        line-height: 24px;
+        text-align: center;
+        color: #ffffff;
+}
+
+.roll_area {
+        display: flex;
+        column-gap: 10px;
 }
 
 .dice {
@@ -141,9 +187,18 @@ h1 {
 }
 
 .die .value {
-        display: flex;
+        display: none;
         justify-content: center;
         align-items: center;
+}
+
+.die .value.one,
+.die .value.two,
+.die .value.three,
+.die .value.four,
+.die .value.five,
+.die .value.six {
+        display: flex;
         width: 100px;
         height: 100px;
 }
@@ -178,8 +233,17 @@ h1 {
         content: '\2685';
 }
 
-.die .state {
+.die .value.one ~ .state,
+.die .value.two ~ .state,
+.die .value.three ~ .state,
+.die .value.four ~ .state,
+.die .value.five ~ .state,
+.die .value.six ~ .state {
         display: flex;
+}
+
+.die .state {
+        display: none;
         justify-content: center;
         cursor: pointer;
 }
@@ -237,4 +301,8 @@ button:hover {
 
 button:active {
         background-color: #cccccc;
+}
+
+.hidden {
+        display: none;
 }
