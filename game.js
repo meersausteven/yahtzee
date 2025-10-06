@@ -8,14 +8,114 @@ document.addEventListener("DOMContentLoaded", () => {
 
 class Die {
         sides;
+        value;
+        keep = false;
+        frozen = true;
 
         constructor(sides = [1, 2, 3, 4, 5, 6]) {
                 this.sides = sides;
         }
 
         roll() {
+                this.frozen = false;
+
                 const ranNum = Math.floor(Math.random() * this.sides.length);
-                return (this.sides[ranNum]);
+                this.value = this.sides[ranNum];
+
+                return this.value;
+        }
+
+        render() {
+                // Die Wrapper
+                const dieWrapper = document.createElement('div');
+                dieWrapper.classList.add('die');
+
+                // Die Value
+                const valueEl = document.createElement('div');
+                valueEl.classList.add('value', game.diceDic[this.value]);
+
+                // Die State
+                const stateEl = document.createElement('div');
+                stateEl.classList.add('state', 'reroll');
+                if (this.keep) {
+                        stateEl.classList.replace('reroll', 'keep');
+                }
+                stateEl.addEventListener('click', () => {
+                        if (this.frozen) {
+                                return;
+                        }
+
+                        this.keep = !this.keep;
+
+                        if (this.keep) {
+                                stateEl.classList.replace('reroll', 'keep');
+                        } else {
+                                stateEl.classList.replace('keep', 'reroll');
+                        }
+                });
+
+                dieWrapper.appendChild(valueEl);
+                dieWrapper.appendChild(stateEl);
+
+                return dieWrapper;
+        }
+}
+
+class Dice {
+        dice;
+        formattedRoll;
+
+        constructor(dice) {
+                this.dice = dice;
+
+                this.formatRoll();
+        }
+
+        roll() {
+                for (let i = 0; i < this.dice.length; i++) {
+                        if (!this.dice[i].keep) {
+                                this.dice[i].roll();
+                        }
+                }
+
+                this.formatRoll();
+        }
+
+        formatRoll() {
+                const sortedRoll = Array.from({length:6}, (_, i) => i = 0);
+                for (let i = 0; i < this.dice.length; i++) {
+                        const dieValue = this.dice[i].value;
+
+                        sortedRoll[dieValue - 1] += 1;
+                }
+
+                this.formattedRoll = sortedRoll.join("");
+        }
+
+        resetKeeping() {
+                for (let i = 0; i < this.dice.length; i++) {
+                        this.dice[i].keep = false;
+                        this.dice[i].frozen = true;
+                }
+        }
+
+        render(parentEl) {
+                // Dice Wrapper
+                const diceWrapper = document.createElement('div');
+                diceWrapper.classList.add('dice');
+
+                // Dice
+                for (let i = 0; i < this.dice.length; i++) {
+                        diceWrapper.appendChild(this.dice[i].render());
+                }
+
+                // clear already existent dice
+                const diceEl = parentEl.querySelector('.dice');
+                if (diceEl != null) {
+                        parentEl.removeChild(diceEl);
+                }
+
+                parentEl.prepend(diceWrapper);
         }
 }
 
@@ -281,8 +381,8 @@ class SheetRow {
                                 return;
                         }
 
-                        if (this.canScore(game.getCurrentRollString())) {
-                                this.score(game.getCurrentRollString());
+                        if (this.canScore(game.dice.formattedRoll)) {
+                                this.score(game.dice.formattedRoll);
                         } else {
                                 this.nulling = true;
                         }
@@ -354,14 +454,14 @@ class SheetSectionBonus {
 
 class Game {
         sheet = null;
+        dice = new Dice([new Die(), new Die(), new Die(), new Die(), new Die()]);
+        maxRerolls = 3;
+        availableRerolls = 0;
+        highscore = 0;
         sheetParentEl = document.querySelector('.scoreboard');
         highscoreEl = document.querySelector('.highscore');
         patternsEl = document.querySelector('.patterns');
-        dice = [new Die(), new Die(), new Die(), new Die(), new Die()];
-        maxRerolls = 3;
-        availableRerolls = 0;
-        currentRoll = [0, 0, 0, 0, 0];
-        highscore = 0;
+        diceParentEl = document.querySelector('.roll_area');
         diceDic = ["", "one", "two", "three", "four", "five", "six"];
 
         constructor() {
@@ -378,7 +478,10 @@ class Game {
 
         resetRerolls() {
                 this.availableRerolls = this.maxRerolls;
+                this.updateRerolls();
+        }
 
+        updateRerolls() {
                 const counter = document.querySelector('.reroll_count');
                 counter.innerHTML = `Available Re-Rolls: ${this.availableRerolls}`;
         }
@@ -436,7 +539,7 @@ class Game {
         }
 
         checkRollPattern() {
-                const detectedNames = this.sheet.checkPatterns(this.getCurrentRollString());
+                const detectedNames = this.sheet.checkPatterns(this.dice.formattedRoll);
                 this.patternsEl.innerHTML = detectedNames.join(' - ');
         }
 
@@ -445,22 +548,12 @@ class Game {
                         return;
                 }
 
-                const diceEl = document.querySelectorAll('.dice .die');
-                for (let i = 0; i < this.dice.length; i++) {
-                        const dieEl = diceEl[i];
-                        // skip dice marked with "keep"
-                        if (dieEl.querySelector('.state.keep') !== null) {
-                                continue;
-                        }
-
-                        const roll = this.dice[i].roll();
-                        dieEl.querySelector('.value').classList = `value ${this.diceDic[roll]}`;
-
-                        this.currentRoll[i] = roll;
-                }
-
                 this.availableRerolls--;
-                this.resetRerolls();
+                this.updateRerolls();
+
+                this.dice.roll();
+                this.dice.render(this.diceParentEl);
+
                 this.checkRollPattern();
 
                 this.sheet.show();
@@ -472,22 +565,7 @@ class Game {
                 this.sheet.checkCompletion();
                 this.updateSheet();
 
-                resetDiceKeeping();
-        }
-}
-
-const selectDie = (event) => {
-        const button = event.target;
-        if (button.classList.contains('keep')) {
-                button.classList.replace('keep', 'reroll');
-        } else {
-                button.classList.replace('reroll', 'keep');
-        }
-}
-
-const resetDiceKeeping = () => {
-        const keepStates = document.querySelectorAll('.die .state.keep');
-        for (let i = 0; i < keepStates.length; i++) {
-                keepStates[i].classList.replace('keep', 'reroll');
+                this.dice.resetKeeping();
+                this.dice.render(this.diceParentEl);
         }
 }
