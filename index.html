@@ -9,6 +9,7 @@
                         <div class="title">
                                 <h1>YAHTZEE</h1>
                                 <div class="highscore">High Score: 0 Points</div>
+                                <button class="restart" onclick="game.start()">Restart</button>
                         </div>
                 </div>
                 <div class="tabletop">
@@ -38,7 +39,7 @@
                                                         <div class="state reroll" onclick="selectDie(event)"></div>
                                                 </div>
                                         </div>
-                                        <button class="roll" onclick="rollDice()">ROLL</button>
+                                        <button class="roll" onclick="game.rollDice()">ROLL</button>
                                 </div>
                         </div>
                 </div>

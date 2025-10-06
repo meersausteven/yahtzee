@@ -1,6 +1,9 @@
 
+var game;
+
 document.addEventListener("DOMContentLoaded", () => {
-        startGame();
+        game = new Game();
+        game.start();
 });
 
 class Die {
@@ -18,7 +21,7 @@ class Die {
 
 class Sheet {
         sections;
-        hidden = true;
+        hidden = false;
         total = 0;
 
         constructor(sections) {
@@ -49,13 +52,13 @@ class Sheet {
                                 completedSections++;
                         }
                 }
-console.log("complete sections:", completedSections);
-console.log("# of sections:", this.sections.length);
 
                 if (completedSections == this.sections.length) {
-                        updateHighscore(this.total);
+                        game.updateHighscore(this.total);
 
-                        alert("Game Complete!");
+                        if (window.confirm("Game complete! Do you want to restart?")) {
+                                game.start();
+                        }
                 }
 
                 return false;
@@ -146,8 +149,6 @@ class SheetSection {
                                 completedRows++;
                         }
                 }
-console.log("completed rows:", completedRows);
-console.log("# of rows:", this.rows.length);
 
                 if (completedRows == this.rows.length) {
                         this.calcTotal();
@@ -231,7 +232,7 @@ class SheetRow {
         }
 
         canScore(roll) {
-                if ((canScore == false) || (this.scored == true) || (this.nulled == true)) {
+                if ((this.scored == true) || (this.nulled == true)) {
                         return false;
                 }
 
@@ -275,28 +276,18 @@ class SheetRow {
                                 this.nulled = true;
                                 this.scored = true;
 
-                                availableRerolls = allowedRolls;
-                                resetDiceKeeping();
-                                updateRerollCount();
-                                sheet.checkCompletion();
-                                // sheet.hide();
-                                renderSheet(sheet);
+                                game.prepareNewRoll();
 
                                 return;
                         }
 
-                        if (this.canScore(getCurrentRollString())) {
-                                this.score(getCurrentRollString());
+                        if (this.canScore(game.getCurrentRollString())) {
+                                this.score(game.getCurrentRollString());
                         } else {
                                 this.nulling = true;
                         }
 
-                        availableRerolls = allowedRolls;
-                        resetDiceKeeping();
-                        updateRerollCount();
-                        sheet.checkCompletion();
-                        // sheet.hide();
-                        renderSheet(sheet);
+                        game.prepareNewRoll();
                 });
 
                 // Name
@@ -361,28 +352,128 @@ class SheetSectionBonus {
         }
 }
 
-/* Regex for roll pattern recognition
-        (2.*3|3.*2) -> full house
-        (5) -> yahtzee
-        (4|5) -> 4 of a kind
-        (3|4|5) -> 3 of a kind
-        (0*1{5}0*) -> large straight
-        (0*[1-2]{4}0*) -> small straight
-*/
-var sheet;
-var dice = [new Die(), new Die(), new Die(), new Die(), new Die()];
-var detectedPatterns = [];
-var currentRoll = [0, 0, 0, 0, 0];
-var canScore = true;
-var allowedRolls = 3;
-var availableRerolls = allowedRolls;
-var highscore = 0;
-const diceDic = ["", "one", "two", "three", "four", "five", "six"];
+class Game {
+        sheet = null;
+        sheetParentEl = document.querySelector('.scoreboard');
+        highscoreEl = document.querySelector('.highscore');
+        patternsEl = document.querySelector('.patterns');
+        dice = [new Die(), new Die(), new Die(), new Die(), new Die()];
+        maxRerolls = 3;
+        availableRerolls = 0;
+        currentRoll = [0, 0, 0, 0, 0];
+        highscore = 0;
+        diceDic = ["", "one", "two", "three", "four", "five", "six"];
 
-const startGame = () => {
-        createNewSheet();
+        constructor() {
+                this.createSheet();
+                this.updateSheet();
+        }
 
-        updateRerollCount();
+        start() {
+                this.createSheet();
+                this.updateSheet();
+
+                this.resetRerolls();
+        }
+
+        resetRerolls() {
+                this.availableRerolls = this.maxRerolls;
+
+                const counter = document.querySelector('.reroll_count');
+                counter.innerHTML = `Available Re-Rolls: ${this.availableRerolls}`;
+        }
+
+        createSheet() {
+                const upperSection = new SheetSection(
+                        "Upper Section",
+                        [
+                                new SheetRow("Aces", null, [1]),
+                                new SheetRow("Twos", null, [0, 1]),
+                                new SheetRow("Threes", null, [0, 0, 1]),
+                                new SheetRow("Fours", null, [0, 0, 0, 1]),
+                                new SheetRow("Fives", null, [0, 0, 0, 0, 1]),
+                                new SheetRow("Sixes", null, [0, 0, 0, 0, 0, 1])
+                        ],
+                        new SheetSectionBonus("Bonus", 35, 63)
+                );
+                const lowerSection = new SheetSection(
+                        "Lower Section",
+                        [
+                                new SheetRow("3 of a Kind", /(3|4|5)/, [1, 1, 1, 1, 1, 1]),
+                                new SheetRow("4 of a Kind", /(4|5)/, [1, 1, 1, 1, 1, 1]),
+                                new SheetRow("Full House", /(2.*3|3.*2)/, 25),
+                                new SheetRow("Small Straight", /0*[1-2]{4}0*/, 30),
+                                new SheetRow("Large Straight", /0*1{5}0*/, 40),
+                                new SheetRow("Yahtzee", /(5)/, 50),
+                                new SheetRow("Chance", null, [1, 1, 1, 1, 1, 1])
+                        ]
+                );
+                this.sheet = new Sheet([upperSection, lowerSection]);
+        }
+
+        updateSheet() {
+                if (this.sheetParentEl.lastElementChild.classList.contains('sheet')) {
+                        this.sheetParentEl.removeChild(this.sheetParentEl.lastElementChild);
+                }
+
+                this.sheetParentEl.appendChild(this.sheet.render());
+        }
+
+        getCurrentRollString() {
+                const sortedRoll = Array.from({length:6}, (_, i) => i = 0);
+                for (let i = 0; i < this.currentRoll.length; i++) {
+                        const currentRollNum = this.currentRoll[i];
+
+                        sortedRoll[currentRollNum - 1] += 1;
+                }
+
+                return sortedRoll.join("");
+        }
+
+        updateHighscore(score) {
+                this.highscore = score;
+                this.highscoreEl.innerHTML = `High Score: ${this.highscore} Points`;
+        }
+
+        checkRollPattern() {
+                const detectedNames = this.sheet.checkPatterns(this.getCurrentRollString());
+                this.patternsEl.innerHTML = detectedNames.join(' - ');
+        }
+
+        rollDice() {
+                if (this.availableRerolls == 0) {
+                        return;
+                }
+
+                const diceEl = document.querySelectorAll('.dice .die');
+                for (let i = 0; i < this.dice.length; i++) {
+                        const dieEl = diceEl[i];
+                        // skip dice marked with "keep"
+                        if (dieEl.querySelector('.state.keep') !== null) {
+                                continue;
+                        }
+
+                        const roll = this.dice[i].roll();
+                        dieEl.querySelector('.value').classList = `value ${this.diceDic[roll]}`;
+
+                        this.currentRoll[i] = roll;
+                }
+
+                this.availableRerolls--;
+                this.resetRerolls();
+                this.checkRollPattern();
+
+                this.sheet.show();
+                this.updateSheet();
+        }
+
+        prepareNewRoll() {
+                this.resetRerolls();
+                this.sheet.checkCompletion();
+                this.updateSheet();
+
+                resetDiceKeeping();
+        }
 }
 
 const selectDie = (event) => {
@@ -394,104 +485,9 @@ const selectDie = (event) => {
         }
 }
 
-const rollDice = () => {
-        if (availableRerolls == 0) {
-                return;
-        }
-
-        const diceEl = document.querySelectorAll('.dice .die');
-        for (let i = 0; i < dice.length; i++) {
-                const dieEl = diceEl[i];
-                // skip dice marked with "keep"
-                if (dieEl.querySelector('.state.keep') !== null) {
-                        continue;
-                }
-
-                const roll = dice[i].roll();
-                dieEl.querySelector('.value').classList = `value ${diceDic[roll]}`;
-
-                currentRoll[i] = roll;
-        }
-
-        availableRerolls--;
-        updateRerollCount();
-        patternRecognition();
-
-        sheet.show();
-        renderSheet(sheet);
-}
-
-const updateRerollCount = () => {
-        const counter = document.querySelector('.reroll_count');
-        counter.innerHTML = `Available Re-Rolls: ${availableRerolls}`;
-}
-
 const resetDiceKeeping = () => {
         const keepStates = document.querySelectorAll('.die .state.keep');
         for (let i = 0; i < keepStates.length; i++) {
                 keepStates[i].classList.replace('keep', 'reroll');
         }
-}
-
-const patternRecognition = () => {
-        // prepare rolls for pattern recognition
-        const currentRollString = getCurrentRollString();
-
-        // display detected patterns
-        const detectedNames = sheet.checkPatterns(currentRollString);
-        document.querySelector('.patterns').innerHTML = detectedNames.join(' - ');
-}
-
-const updateHighscore = (score) => {
-        document.querySelector('.highscore').innerHTML = `High Score: ${score} Points`;
-}
-
-const getCurrentRollString = () => {
-        const sortedRoll = Array.from({length:6}, (_, i) => i = 0);
-        for (let i = 0; i < currentRoll.length; i++) {
-                const currentRollNum = currentRoll[i];
-
-                sortedRoll[currentRollNum - 1] += 1;
-        }
-
-        return sortedRoll.join("");
-}
-
-const renderSheet = (sheet) => {
-        const scoreboard = document.querySelector('.scoreboard');
-        if (scoreboard.lastElementChild.classList.contains("sheet")) {
-                scoreboard.removeChild(scoreboard.lastElementChild);
-        }
-
-        scoreboard.appendChild(sheet.render());
-}
-
-const createNewSheet = () => {
-        const upperSection = new SheetSection(
-                "Upper Section",
-                [
-                        new SheetRow("Aces", null, [1]),
-                        new SheetRow("Twos", null, [0, 1]),
-                        new SheetRow("Threes", null, [0, 0, 1]),
-                        new SheetRow("Fours", null, [0, 0, 0, 1]),
-                        new SheetRow("Fives", null, [0, 0, 0, 0, 1]),
-                        new SheetRow("Sixes", null, [0, 0, 0, 0, 0, 1])
-                ],
-                new SheetSectionBonus("Bonus", 35, 63)
-        );
-        const lowerSection = new SheetSection(
-                "Lower Section",
-                [
-                        new SheetRow("3 of a Kind", /(3|4|5)/, [1, 1, 1, 1, 1, 1]),
-                        new SheetRow("4 of a Kind", /(4|5)/, [1, 1, 1, 1, 1, 1]),
-                        new SheetRow("Full House", /(2.*3|3.*2)/, 25),
-                        new SheetRow("Small Straight", /0*[1-2]{4}0*/, 30),
-                        new SheetRow("Large Straight", /0*1{5}0*/, 40),
-                        new SheetRow("Yahtzee", /(5)/, 50),
-                        new SheetRow("Chance", null, [1, 1, 1, 1, 1, 1])
-                ]
-        );
-        sheet = new Sheet([upperSection, lowerSection]);
-
-        renderSheet(sheet);
 }
