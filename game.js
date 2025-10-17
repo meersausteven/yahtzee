@@ -1,4 +1,8 @@
 
+Math.lerp = function(a, b, t) {
+        return a + (b - a) * t;
+}
+
 var game;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -6,58 +10,101 @@ document.addEventListener("DOMContentLoaded", () => {
         game.start();
 });
 
+document.addEventListener('keydown', (e) => {
+        if (e.code == "Space") {
+                game.toggleSheet();
+        }
+});
+
 class Die {
         sides;
         value;
+        dieEl;
         keep = false;
-        frozen = true;
 
         constructor(sides = [1, 2, 3, 4, 5, 6]) {
                 this.sides = sides;
         }
 
         roll() {
-                this.frozen = false;
+                // void rendered element
+                this.dieEl = null;
 
+                // calc randomized value from sides
                 const ranNum = Math.floor(Math.random() * this.sides.length);
                 this.value = this.sides[ranNum];
 
                 return this.value;
         }
 
+        toggleKeep() {
+                this.keep = !this.keep;
+                this.dieEl.firstElementChild.classList.toggle('keep');
+        }
+
+        randomStyle() {
+                // get bounds of dice area 
+                const minX = 0;
+                const minY = 100;
+                const maxX = game.diceAreaEl.clientWidth;
+                const maxY = game.diceAreaEl.clientHeight - 100;
+
+                // calc random position in area
+                const randX = Math.lerp(minX, maxX, Math.random());
+                const randY = Math.lerp(minY, maxY, Math.random());
+
+                this.dieEl.style.top = `${randY}px`;
+                this.dieEl.style.left = `${randX}px`;
+
+                // calc random rotation
+                const randRot = Math.lerp(0, 360, Math.random());
+
+                this.dieEl.firstElementChild.style.transform = `rotate(${randRot}deg)`;
+        }
+
         render() {
-                // Die Wrapper
-                const dieWrapper = document.createElement('div');
-                dieWrapper.classList.add('die');
+                if (this.dieEl == null) {
+                        // Wrapper
+                        const wrapper = document.createElement('div');
+                        wrapper.classList.add('die_wrapper');
 
-                // Die Value
-                const valueEl = document.createElement('div');
-                valueEl.classList.add('value', game.diceDic[this.value]);
-
-                // Die State
-                const stateEl = document.createElement('div');
-                stateEl.classList.add('state', 'reroll');
-                if (this.keep) {
-                        stateEl.classList.replace('reroll', 'keep');
-                }
-                stateEl.addEventListener('click', () => {
-                        if (this.frozen) {
-                                return;
-                        }
-
-                        this.keep = !this.keep;
-
+                        // Die
+                        const dieEl = document.createElement('div');
+                        dieEl.classList.add('die');
+                        dieEl.dataset.value = this.value;
                         if (this.keep) {
-                                stateEl.classList.replace('reroll', 'keep');
-                        } else {
-                                stateEl.classList.replace('keep', 'reroll');
+                                dieEl.classList.add('keep');
                         }
-                });
 
-                dieWrapper.appendChild(valueEl);
-                dieWrapper.appendChild(stateEl);
+                        // Eyes
+                        for (let i = 0; i < this.value; i++) {
+                                const eye = document.createElement('div');
+                                eye.classList.add('eye');
 
-                return dieWrapper;
+                                dieEl.appendChild(eye);
+                        }
+
+                        // Event Handling
+                        dieEl.addEventListener('mouseenter', (e) => {
+                                if (e.buttons == 1) {
+                                        this.toggleKeep();
+                                }
+                        });
+                        dieEl.addEventListener('mousedown', (e) => {
+                                if (e.buttons == 1) {
+                                        this.toggleKeep();
+                                }
+                        });
+
+                        wrapper.appendChild(dieEl);
+
+                        this.dieEl = wrapper;
+
+                        // apply random style
+                        this.randomStyle();
+                }
+
+                return this.dieEl;
         }
 }
 
@@ -73,8 +120,10 @@ class Dice {
 
         roll() {
                 for (let i = 0; i < this.dice.length; i++) {
-                        if (!this.dice[i].keep) {
-                                this.dice[i].roll();
+                        const currentDie = this.dice[i];
+
+                        if (!currentDie.keep) {
+                                currentDie.roll();
                         }
                 }
 
@@ -95,8 +144,62 @@ class Dice {
         resetKeeping() {
                 for (let i = 0; i < this.dice.length; i++) {
                         this.dice[i].keep = false;
-                        this.dice[i].frozen = true;
                 }
+        }
+
+        clearDice() {
+                for (let i = 0; i < this.dice.length; i++) {
+                        const currentDie = this.dice[i];
+                        if (currentDie.dieEl == null) {
+                                continue;
+                        }
+
+                        if (!currentDie.keep) {
+                                currentDie.dieEl.classList.add('vanish');
+                                currentDie.dieEl.style.animationDelay = `${Math.random() * 0.25}s`;
+
+                                // roll die once css animation is finished
+                                currentDie.dieEl.getAnimations()[0].finished
+                                .then(() => {
+                                        currentDie.dieEl.classList.replace('vanish', 'nonexistant');
+                                });
+                        }
+                }
+        }
+
+        correctDiePosition(die) {
+                const minDistance = 90;
+
+                for (let i = 0; i < this.dice.length; i++) {
+                        const otherDie = this.dice[i];
+                        if (die == otherDie) {
+                                return false;
+                        }
+
+                        const otherDiePos = {
+                                x: Number(otherDie.dieEl.style.left.replace('px', '')),
+                                y: Number(otherDie.dieEl.style.top.replace('px', ''))
+                        };
+
+                        const diePos = {
+                                x: Number(die.dieEl.style.left.replace('px', '')),
+                                y: Number(die.dieEl.style.top.replace('px', ''))
+                        };
+
+                        const dieVec = {
+                                x: otherDiePos.x - diePos.x,
+                                y: otherDiePos.y - diePos.y
+                        };
+
+                        const distance = Math.sqrt((dieVec.x * dieVec.x) + (dieVec.y * dieVec.y));
+
+                        if (distance <= minDistance) {
+                                die.randomStyle();
+                                return true;
+                        }
+                }
+
+                return false;
         }
 
         render(parentEl) {
@@ -106,7 +209,24 @@ class Dice {
 
                 // Dice
                 for (let i = 0; i < this.dice.length; i++) {
-                        diceWrapper.appendChild(this.dice[i].render());
+                        const currentDie = this.dice[i];
+                        currentDie.render();
+
+                        // check if die is touching another and adjust position
+                        if (!currentDie.keep) {
+                                let touching = true;
+                                while (touching) {
+                                        touching = this.correctDiePosition(currentDie);
+                                }
+
+                                // show animation if it was re-rolled
+                                currentDie.dieEl.classList.add('roll');
+                                currentDie.dieEl.style.animationDelay = `${Math.random() * 0.25}s`;
+                        } else {
+                                currentDie.dieEl.classList.remove('roll');
+                        }
+
+                        diceWrapper.appendChild(currentDie.render());
                 }
 
                 // clear already existent dice
@@ -121,7 +241,6 @@ class Dice {
 
 class Sheet {
         sections;
-        hidden = false;
         total = 0;
 
         constructor(sections) {
@@ -176,9 +295,6 @@ class Sheet {
                 // Sheet Wrapper
                 const sheetEl = document.createElement('div');
                 sheetEl.classList.add('sheet');
-                if (this.hidden) {
-                        sheetEl.classList.add('hidden');
-                }
 
                 // Sections
                 for (let i = 0; i < this.sections.length; i++) {
@@ -318,7 +434,6 @@ class SheetRow {
         scoreRule;
         points = 0;
         scored = false;
-        nulling = false;
         nulled = false;
 
         constructor(name, pattern = null, scoreRule = [1, 1, 1, 1, 1, 1]) {
@@ -366,28 +481,34 @@ class SheetRow {
                 if (!this.scored) {
                         rowEl.classList.add('empty');
                 }
+                if (this.nulled) {
+                        rowEl.classList.add('null');
+                }
 
-                rowEl.addEventListener('click', () => {
-                        if (this.scored) {
+                rowEl.addEventListener('click', (e) => {
+                        if (!game.canScore || this.scored) {
                                 return;
                         }
 
-                        if (this.nulling) {
-                                this.nulled = true;
-                                this.scored = true;
-
-                                game.prepareNewRoll();
-
-                                return;
-                        }
+                        game.pencilWrite(e.target.parentElement);
 
                         if (this.canScore(game.dice.formattedRoll)) {
                                 this.score(game.dice.formattedRoll);
-                        } else {
-                                this.nulling = true;
                         }
 
-                        game.prepareNewRoll();
+                        game.canScore = false;
+                });
+                rowEl.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+
+                        if (!game.canScore || this.scored) {
+                                return;
+                        }
+
+                        game.pencilWrite(e.target.parentElement, true);
+
+                        this.nulled = true;
+                        game.canScore = false;
                 });
 
                 // Name
@@ -404,9 +525,6 @@ class SheetRow {
 
                 if (this.scored) {
                         pointsCell.innerHTML = this.points;
-                }
-                if (this.nulled) {
-                        pointsCell.innerHTML = "X";
                 }
 
                 rowEl.appendChild(nameCell);
@@ -458,10 +576,15 @@ class Game {
         maxRerolls = 3;
         availableRerolls = 0;
         highscore = 0;
-        sheetParentEl = document.querySelector('.scoreboard');
-        highscoreEl = document.querySelector('.highscore');
-        patternsEl = document.querySelector('.patterns');
-        diceParentEl = document.querySelector('.roll_area');
+        canScore = false;
+        sheetParentEl = document.querySelector('.sheet_wrapper');
+        highscoreEl = document.querySelector('#highscore');
+        rerollCountEl = document.querySelector('#reroll-count');
+        patternsEl = document.querySelector('#pattern-area');
+        diceParentEl = document.querySelector('#dice-area');
+        diceAreaEl = document.querySelector('#dice-area');
+        notebookEl = document.querySelector('#notebook');
+        pencilEl = document.querySelector('#pencil');
         diceDic = ["", "one", "two", "three", "four", "five", "six"];
 
         constructor() {
@@ -472,6 +595,7 @@ class Game {
         start() {
                 this.createSheet();
                 this.updateSheet();
+                this.updatePencil();
 
                 this.resetRerolls();
         }
@@ -482,8 +606,7 @@ class Game {
         }
 
         updateRerolls() {
-                const counter = document.querySelector('.reroll_count');
-                counter.innerHTML = `Available Re-Rolls: ${this.availableRerolls}`;
+                this.rerollCountEl.innerHTML = `Available Re-Rolls: ${this.availableRerolls}`;
         }
 
         createSheet() {
@@ -515,22 +638,59 @@ class Game {
         }
 
         updateSheet() {
-                if (this.sheetParentEl.lastElementChild.classList.contains('sheet')) {
-                        this.sheetParentEl.removeChild(this.sheetParentEl.lastElementChild);
+                const sheetParentLastChild = this.sheetParentEl.lastElementChild;
+                if (sheetParentLastChild !== null && sheetParentLastChild.classList.contains('sheet')) {
+                        this.sheetParentEl.removeChild(sheetParentLastChild);
                 }
 
                 this.sheetParentEl.appendChild(this.sheet.render());
         }
 
-        getCurrentRollString() {
-                const sortedRoll = Array.from({length:6}, (_, i) => i = 0);
-                for (let i = 0; i < this.currentRoll.length; i++) {
-                        const currentRollNum = this.currentRoll[i];
+        updatePencil() {
+                if (this.canScore) {
+                        this.pencilEl.classList.remove('blocked');
+                } else {
+                        this.pencilEl.classList.add('blocked');
+                }
+        }
 
-                        sortedRoll[currentRollNum - 1] += 1;
+        toggleSheet() {
+                // invisible on first load
+                this.notebookEl.classList.remove('invisible');
+
+                this.notebookEl.classList.toggle('hidden');
+        }
+
+        pencilWrite(el, strike = false) {
+                el.appendChild(this.pencilEl);
+
+                this.pencilEl.style.top = '-305px';
+                this.pencilEl.style.left = '440px';
+                this.pencilEl.style.transform = 'rotate(-116.5deg)';
+                this.pencilEl.querySelector('.shadow').classList.remove('invisible');
+                this.pencilEl.classList = 'writing';
+
+                if (strike) {
+                        this.pencilEl.style.left = '200px';
+                        this.pencilEl.classList = 'striking';
                 }
 
-                return sortedRoll.join("");
+                // reset pencil once css animation is finished - or cancelled
+                this.pencilEl.getAnimations()[0].finished
+                .catch(() => {
+                        console.log('animation cancelled');
+                })
+                .finally(() => {
+                        this.notebookEl.appendChild(this.pencilEl);
+
+                        this.pencilEl.style.top = '';
+                        this.pencilEl.style.left = '';
+                        this.pencilEl.style.transform = '';
+                        this.pencilEl.querySelector('.shadow').classList.add('invisible');
+                        this.pencilEl.classList.remove('writing', 'striking');
+
+                        this.prepareNewRoll();
+                });
         }
 
         updateHighscore(score) {
@@ -539,13 +699,31 @@ class Game {
         }
 
         checkRollPattern() {
+                // clear previous patterns
+                while (this.patternsEl.lastElementChild) {
+                        this.patternsEl.removeChild(this.patternsEl.lastElementChild);
+                }
+
+                // show new patterns
                 const detectedNames = this.sheet.checkPatterns(this.dice.formattedRoll);
-                this.patternsEl.innerHTML = detectedNames.join(' - ');
+                for (let i = 0; i < detectedNames.length; i++) {
+                        const patternEl = document.createElement('div');
+                        patternEl.classList.add('pattern');
+                        patternEl.innerHTML = detectedNames[i];
+
+                        this.patternsEl.appendChild(patternEl);
+                }
         }
 
         rollDice() {
                 if (this.availableRerolls == 0) {
                         return;
+                }
+
+                if (this.canScore == false) {
+                        this.canScore = true;
+                        this.updateSheet();
+                        this.updatePencil();
                 }
 
                 this.availableRerolls--;
@@ -555,17 +733,15 @@ class Game {
                 this.dice.render(this.diceParentEl);
 
                 this.checkRollPattern();
-
-                this.sheet.show();
-                this.updateSheet();
         }
 
         prepareNewRoll() {
                 this.resetRerolls();
                 this.sheet.checkCompletion();
                 this.updateSheet();
+                this.updatePencil();
 
                 this.dice.resetKeeping();
-                this.dice.render(this.diceParentEl);
+                this.dice.clearDice();
         }
 }

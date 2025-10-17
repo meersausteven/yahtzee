@@ -5,20 +5,26 @@
                 <script src="game.js"></script>
         </head>
         <body>
-                <div class="scoreboard">
-                        <div class="title">
-                                <h1>YAHTZEE</h1>
-                                <div class="highscore">High Score: 0 Points</div>
-                                <button class="restart" onclick="game.start()">Restart</button>
+                <button id="restart" onclick="game.start()">Restart</button>
+                <div id="tabletop">
+                        <div class="rim">
+                                <div class="border">
+                                        <div class="inner">
+                                                <div id="reroll-count"></div>
+                                                <div id="pattern-area"></div>
+                                                <div id="dice-area"></div>
+                                                <div id="roll-button" onclick="game.rollDice()">Roll</div>
+                                        </div>
+                                </div>
                         </div>
                 </div>
-                <div class="tabletop">
-                        <div class="reroll_count">Available Re-Rolls: 3</div>
-                        <div class="play_area">
-                                <div class="patterns"></div>
-                                <div class="roll_area">
-                                        <button class="roll" onclick="game.rollDice()">ROLL</button>
-                                </div>
+                <div id="notebook" class="hidden invisible">
+                        <div class="title">YAHTZEE</div>
+                        <div class="subtitle" id="highscore">High Score: 0 Points</div>
+                        <div class="sheet_wrapper"></div>
+                        <div id="pencil" class="">
+                                <div class="pencil"></div>
+                                <div class="shadow invisible"></div>
                         </div>
                 </div>
         </body>
