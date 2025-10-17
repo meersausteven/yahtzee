@@ -486,10 +486,11 @@ class SheetRow {
                                 return;
                         }
 
-                        game.pencilWrite(e.target.parentElement);
-
                         if (this.canScore(game.dice.formattedRoll)) {
                                 this.score(game.dice.formattedRoll);
+                                game.pencilWrite(e.target.parentElement).then(() => {
+                                        game.prepareNewRoll();
+                                });
                         }
 
                         game.canScore = false;
@@ -659,40 +660,76 @@ class Game {
         }
 
         pencilWrite(el, strike = false) {
-                el.appendChild(this.pencilEl);
+                return new Promise((resolve, reject) => {
+                        el.appendChild(this.pencilEl);
 
-                this.pencilEl.style.top = '-305px';
-                this.pencilEl.style.left = '440px';
-                this.pencilEl.style.transform = 'rotate(-116.5deg)';
-                this.pencilEl.querySelector('.shadow').classList.remove('invisible');
-                this.pencilEl.classList = 'writing';
+                        this.pencilEl.style.top = '-305px';
+                        this.pencilEl.style.left = '440px';
+                        this.pencilEl.style.transform = 'rotate(-116.5deg)';
+                        this.pencilEl.querySelector('.shadow').classList.remove('invisible');
+                        this.pencilEl.classList = 'writing';
 
-                if (strike) {
-                        this.pencilEl.style.left = '200px';
-                        this.pencilEl.classList = 'striking';
-                }
+                        if (strike) {
+                                this.pencilEl.style.left = '200px';
+                                this.pencilEl.classList = 'striking';
+                        }
 
-                // reset pencil once css animation is finished - or cancelled
-                this.pencilEl.getAnimations()[0].finished
-                .catch(() => {
-                        console.log('animation cancelled');
-                })
-                .finally(() => {
-                        this.notebookEl.appendChild(this.pencilEl);
+                        // reset pencil once css animation is finished - or cancelled
+                        this.pencilEl.getAnimations()[0].finished
+                        .catch(() => {
+                                console.log('animation cancelled');
+                                reject();
+                        })
+                        .finally(() => {
+                                this.notebookEl.appendChild(this.pencilEl);
 
-                        this.pencilEl.style.top = '';
-                        this.pencilEl.style.left = '';
-                        this.pencilEl.style.transform = '';
-                        this.pencilEl.querySelector('.shadow').classList.add('invisible');
-                        this.pencilEl.classList.remove('writing', 'striking');
+                                this.pencilEl.style.top = '';
+                                this.pencilEl.style.left = '';
+                                this.pencilEl.style.transform = '';
+                                this.pencilEl.querySelector('.shadow').classList.add('invisible');
+                                this.pencilEl.classList.remove('writing', 'striking');
 
-                        this.prepareNewRoll();
+                                resolve();
+                        });
                 });
         }
 
         updateHighscore(score) {
                 this.highscore = score;
                 this.highscoreEl.innerHTML = `High Score: ${this.highscore} Points`;
+        }
+
+        showCompletion() {
+                // Wrapper
+                const message = document.createElement('div');
+                message.id = 'completion-message';
+
+                // Title
+                const title = document.createElement('h1');
+                title.innerHTML = 'Game Over!';
+
+                // Subtitle
+                const subtitle = document.createElement('p');
+                subtitle.innerHTML = `You scored ${this.highscore} Points`;
+
+                // Dismiss Button
+                const button = document.createElement('div');
+                button.id = 'dismiss-button';
+                button.innerHTML = 'Dismiss';
+                button.addEventListener('click', () => {
+                        this.hideCompletion();
+                });
+
+                message.appendChild(title);
+                message.appendChild(subtitle);
+                message.appendChild(button);
+
+                document.body.appendChild(message);
+        }
+
+        hideCompletion() {
+                const message = document.getElementById('completion-message');
+                document.body.removeChild(message);
         }
 
         checkRollPattern() {
@@ -742,10 +779,7 @@ class Game {
 
                 if (this.sheet.checkCompletion()) {
                         this.updateHighscore(this.sheet.total);
-
-                        if (window.confirm("Game complete! Do you want to restart?")) {
-                                game.start();
-                        }
+                        this.showCompletion();
                 }
         }
 }
