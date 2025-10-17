@@ -273,11 +273,7 @@ class Sheet {
                 }
 
                 if (completedSections == this.sections.length) {
-                        game.updateHighscore(this.total);
-
-                        if (window.confirm("Game complete! Do you want to restart?")) {
-                                game.start();
-                        }
+                        return true;
                 }
 
                 return false;
@@ -508,6 +504,7 @@ class SheetRow {
                         game.pencilWrite(e.target.parentElement, true);
 
                         this.nulled = true;
+                        this.scored = true;
                         game.canScore = false;
                 });
 
@@ -519,11 +516,8 @@ class SheetRow {
                 // Points
                 const pointsCell = document.createElement('div');
                 pointsCell.classList.add('cell');
-                if (this.nulling) {
-                        pointsCell.classList.add('null');
-                }
 
-                if (this.scored) {
+                if (this.scored && !this.nulled) {
                         pointsCell.innerHTML = this.points;
                 }
 
@@ -538,6 +532,7 @@ class SheetSectionBonus {
         name;
         points;
         threshold;
+        awarded = false;
 
         constructor(name, points, threshold) {
                 this.name = name;
@@ -547,8 +542,10 @@ class SheetSectionBonus {
 
         thresholdReached(points) {
                 if (points >= this.threshold) {
-                        return true;
+                        this.awarded = true;
                 }
+
+                return this.awarded;
         }
 
         render() {
@@ -561,7 +558,7 @@ class SheetSectionBonus {
 
                 const bonusPointsCell = document.createElement('div');
                 bonusPointsCell.classList.add('cell');
-                bonusPointsCell.innerHTML = (this.thresholdReached()) ? this.points : 0;
+                bonusPointsCell.innerHTML = (this.awarded) ? this.points : 0;
 
                 bonusEl.appendChild(bonusNameCell);
                 bonusEl.appendChild(bonusPointsCell);
@@ -737,11 +734,18 @@ class Game {
 
         prepareNewRoll() {
                 this.resetRerolls();
-                this.sheet.checkCompletion();
                 this.updateSheet();
                 this.updatePencil();
 
                 this.dice.resetKeeping();
                 this.dice.clearDice();
+
+                if (this.sheet.checkCompletion()) {
+                        this.updateHighscore(this.sheet.total);
+
+                        if (window.confirm("Game complete! Do you want to restart?")) {
+                                game.start();
+                        }
+                }
         }
 }

@@ -244,6 +244,7 @@ body {
 /* Dice */
 #dice-area {
         background-image: url('./assets/images/controls.png');
+        background-size: cover;
         width: 800px;
         height: 600px;
         position: relative;
