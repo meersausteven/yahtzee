@@ -70,6 +70,8 @@ body {
         width: 100vw;
         overflow: hidden;
         background-image: url('./assets/images/pattern.png');
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: pixelated;
         image-rendering: crisp-edges;
         background-size: 192px 192px;
         margin: 0px;
