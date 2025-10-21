@@ -5,7 +5,34 @@
                 <script src="game.js"></script>
         </head>
         <body>
-                <button id="restart" onclick="game.start()">Restart</button>
+                <div id="restart-button" onclick="game.start()">Restart</div>
+                <div id="options-button" onclick="game.toggleOptions()">Options</div>
+                <div id="options" class="nonexistent">
+                        <div class="option">
+                                <div class="name">Game Speed</div>
+                                <input type="range" min="0.1" max="2" step="0.1" data-var-name="--animation-speed" onchange="game.changeOption(event)"/>
+                        </div>
+                        <div class="option">
+                                <div class="name">Die Color</div>
+                                <input type="color" data-var-name="--die-color" onchange="game.changeOption(event)"/>
+                        </div>
+                        <div class="option">
+                                <div class="name">Die Eye Color</div>
+                                <input type="color" data-var-name="--die-eye-color" onchange="game.changeOption(event)"/>
+                        </div>
+                        <div class="option">
+                                <div class="name">Table Rim Color</div>
+                                <input type="color" data-var-name="--table-rim-color" onchange="game.changeOption(event)"/>
+                        </div>
+                        <div class="option">
+                                <div class="name">Table Border Color</div>
+                                <input type="color" data-var-name="--table-border-color" onchange="game.changeOption(event)"/>
+                        </div>
+                        <div class="option">
+                                <div class="name">Table Cloth Color</div>
+                                <input type="color" data-var-name="--table-cloth-color" onchange="game.changeOption(event)"/>
+                        </div>
+                </div>
                 <div id="tabletop">
                         <div class="rim">
                                 <div class="border">

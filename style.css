@@ -23,6 +23,7 @@
 /* Styling */
 /* Variables */
 :root {
+        --animation-speed: 1;
         /* dice */
         --die-color: #a12121;
         --die-eye-color: #ffffff;
@@ -43,7 +44,11 @@
         --sheet-bonus-color: #1b6413;
         --sheet-section-color: #a5490c;
         --sheet-total-color: #8d1010;
+        --sheet-show-animation-duration: 0.8s;
+        --sheet-hide-animation-duration: 0.8s;
         /* pencil */
+        --pencil-show-animation-duration: 0.75s;
+        --pencil-hide-animation-duration: 0.75s;
         --pencil-writing-animation-duration: 0.75s;
         --pencil-wiggle-animation-duration: 0.25s;
         --pencil-wiggle-animation-rotation: 1.5deg;
@@ -89,7 +94,7 @@ body {
 }
 
 /* General Elements */
-#restart {
+#restart-button {
         position: absolute;
         left: 20px;
         top: 20px;
@@ -107,15 +112,63 @@ body {
         transition: 0.25s;
 }
 
-#restart:hover {
+#restart-button:hover {
         border: 3px solid #ffffff;
+}
+
+#options-button {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 1;
+        background-color: #ffffff;
+        border: 3px solid transparent;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 20px;
+        line-height: 24px;
+        font-weight: 600;
+        color: #000000;
+        cursor: pointer;
+        box-sizing: content-box;
+        transition: 0.25s;
+}
+
+#options-button:hover {
+        border: 3px solid #000000;
+}
+
+#options {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+        display: flex;
+        flex-direction: column;
+        row-gap: 20px;
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.5);
+}
+
+.option {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        column-gap: 10px;
+}
+
+.option * {
+        flex: 1 1;
 }
 
 .invisible {
         opacity: 0 !important;
 }
 
-.nonexistant {
+.nonexistent {
         display: none !important;
 }
 
@@ -260,11 +313,11 @@ body {
 .die_wrapper.roll {
         opacity: 0;
         filter: drop-shadow(10px 10px 25px rgba(0, 0, 0, 0.75));
-        animation: rollDie var(--die-roll-animation-duration) ease-out forwards;
+        animation: rollDie calc(var(--animation-speed) * var(--die-roll-animation-duration)) ease-out forwards;
 }
 
 .die_wrapper.vanish {
-        animation: vanishDie var(--die-vanish-animation-duration) ease-in forwards;
+        animation: vanishDie calc(var(--animation-speed) * var(--die-vanish-animation-duration)) ease-in forwards;
 }
 
 .die {
@@ -389,11 +442,11 @@ body {
         position: absolute;
         z-index: 10;
         padding: 12px 20px 25px 45px;
-        animation: showSheet 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation: showSheet calc(var(--animation-speed) * var(--sheet-show-animation-duration)) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 #notebook.hidden {
-        animation: hideSheet 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+        animation: hideSheet calc(var(--animation-speed) * var(--sheet-hide-animation-duration)) cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }
 
 #notebook .sheet_wrapper {
@@ -565,8 +618,8 @@ body {
 /* Pencil */
 #notebook:not(.hidden) #pencil:not(.writing):not(.striking):not(.blocked) {
         transform: translateX(-50px) translateY(100%) rotate(-35deg);
-        animation: pencilShow 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        animation-delay: 0.5s;
+        animation: pencilShow calc(var(--animation-speed) * var(--pencil-show-animation-duration)) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation-delay: calc(var(--animation-speed) * 0.5s);
 }
 
 #pencil {
@@ -578,7 +631,7 @@ body {
         right: -80px;
         top: 50%;
         transform: translateX(-50px) translateY(100%) rotate(-35deg);
-        animation: pencilHide 0.75s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+        animation: pencilHide calc(var(--animation-speed) * var(--pencil-hide-animation-duration)) cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }
 
 #pencil .pencil {
@@ -610,15 +663,15 @@ body {
 }
 
 #pencil.writing {
-        animation: pencilWriting var(--pencil-writing-animation-duration) linear;
+        animation: pencilWriting calc(var(--animation-speed) * var(--pencil-writing-animation-duration)) linear;
 }
 
 #pencil.writing .pencil {
-        animation: pencilWiggle var(--pencil-wiggle-animation-duration) linear infinite;
+        animation: pencilWiggle calc(var(--animation-speed) * var(--pencil-wiggle-animation-duration)) linear infinite;
 }
 
 #pencil.striking {
-        animation: pencilStriking var(--pencil-striking-animation-duration) linear;
+        animation: pencilStriking calc(var(--animation-speed) * var(--pencil-striking-animation-duration)) linear;
 }
 
 @keyframes pencilWriting {

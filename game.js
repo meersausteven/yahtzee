@@ -161,19 +161,19 @@ class Dice {
                                 // roll die once css animation is finished
                                 currentDie.dieEl.getAnimations()[0].finished
                                 .then(() => {
-                                        currentDie.dieEl.classList.replace('vanish', 'nonexistant');
+                                        currentDie.dieEl.classList.replace('vanish', 'nonexistent');
                                 });
                         }
                 }
         }
 
         correctDiePosition(die) {
-                const minDistance = 90;
+                const minDistance = 100;
 
                 for (let i = 0; i < this.dice.length; i++) {
                         const otherDie = this.dice[i];
-                        if (die == otherDie) {
-                                return false;
+                        if ((die == otherDie) || (otherDie.dieEl === null)) {
+                                continue;
                         }
 
                         const otherDiePos = {
@@ -195,6 +195,7 @@ class Dice {
 
                         if (distance <= minDistance) {
                                 die.randomStyle();
+
                                 return true;
                         }
                 }
@@ -502,11 +503,13 @@ class SheetRow {
                                 return;
                         }
 
-                        game.pencilWrite(e.target.parentElement, true);
+                        game.pencilWrite(e.target.parentElement, true).then(() => {
+                                this.nulled = true;
+                                this.scored = true;
+                                game.canScore = false;
 
-                        this.nulled = true;
-                        this.scored = true;
-                        game.canScore = false;
+                                game.prepareNewRoll();
+                        });
                 });
 
                 // Name
@@ -591,6 +594,8 @@ class Game {
         }
 
         start() {
+                this.prepareOptions();
+
                 this.createSheet();
                 this.updateSheet();
                 this.updatePencil();
@@ -781,5 +786,21 @@ class Game {
                         this.updateHighscore(this.sheet.total);
                         this.showCompletion();
                 }
+        }
+
+        prepareOptions() {
+                const options = document.querySelectorAll('#options .option input');
+                for (let i = 0; i < options.length; i++) {
+                        const option = options[i];
+                        option.value = getComputedStyle(document.documentElement, null).getPropertyValue(option.dataset.varName);
+                }
+        }
+
+        toggleOptions() {
+                document.getElementById('options').classList.toggle('nonexistent');
+        }
+
+        changeOption(e) {
+                document.documentElement.style.setProperty(e.target.dataset.varName, e.target.value);
         }
 }
